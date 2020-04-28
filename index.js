@@ -61,27 +61,4 @@ exports.replace = (config, files = ['.nuxt/**/*', 'static/**/*']) => {
     }
     // dry: true
   })
-
-  // for proper cache management some files need to be renamed with new hash
-  const hashedFiles = changedFiles
-    .map(file => ({
-      file,
-      match: file.match(/\/([a-z0-9]{20})\./) || file.match(/\/manifest\.([a-z0-9]{8}\.json)/)
-    }))
-    .filter(f => !!f.match)
-  const configHash = hash(config).slice(0, 8)
-  hashedFiles.forEach(f => {
-    const newPath = f.file.replace(`${f.match[1]}`, `${configHash}-${f.match[1]}`)
-    fs.renameSync(f.file, newPath)
-    debug(`Rename hashed file ${f.file} -> ${newPath}`)
-  })
-  replace.sync({
-    files,
-    from: hashedFiles.map(f => new RegExp(f.match[1].replace('.', '\\.'), 'g')),
-    to: (match, offset, originalString, file) => {
-      debug(`Replace reference to hashed file in other file ${file}, hash=${match}`)
-      return `${configHash}-${match}`
-    }
-    // dry: true
-  })
 }
